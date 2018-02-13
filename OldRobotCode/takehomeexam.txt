@@ -1,0 +1,61 @@
+#!/usr/bin/python
+
+from ev3dev import *
+import threading
+from time import sleep
+
+tsFront = TouchSensor("ev3:in1")
+tsBack = TouchSensor("ev3:in2")
+
+mR = LargeMotor('outB')		
+mL = LargeMotor('outC')
+
+lock = threading.Lock()
+
+speed = 120
+direction = 1
+
+def FrontBumper():
+
+	while True:
+		sleep(0.1)
+		if tsFront.is_pressed:
+			lock.aquire(True)
+			mR.stop(stop_action='brake')
+			mL.stop(stop_action='brake')
+			direction = -1
+			mR.run_forever(speed_sp=(speed*direction))		
+			mL.run_forever(speed_sp=(speed*direction))		
+
+			lock.release()
+
+
+def BackBumper():
+
+	while True:
+		sleep(0.1)
+		if tsBack.is_pressed:
+			lock.aquire(True)
+			mR.stop(stop_action='brake')
+			mL.stop(stop_action='brake')
+			direction = 1
+			mR.run_forever(speed_sp=(speed*direction))		
+			mL.run_forever(speed_sp=(speed*direction))	
+
+			lock.release()
+
+
+threadF = threading.Thread(target=FrontBumper)
+threadB = threading.Thread(target=BackBumper)
+
+mR.run_forever(speed_sp=(speed*direction))		
+mL.run_forever(speed_sp=(speed*direction))
+
+threadF.start()
+threadB.start()
+
+threadF.join()
+threadB.join()
+
+
+
